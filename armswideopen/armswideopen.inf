@@ -1,0 +1,87 @@
+;
+; armswideopen.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=ArmsWideOpen
+ClassGuid={D503BF5A-8B7B-41AD-AF08-2159D1278412}
+Provider=%ManufacturerName%
+CatalogFile=armswideopen.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+PnpLockDown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+armswideopen_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+armswideopen.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%armswideopen.DeviceDesc%=armswideopen_Device, Root\armswideopen ; TODO: edit hw-id
+
+[armswideopen_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+armswideopen.sys
+
+;-------------- Service installation
+[armswideopen_Device.NT.Services]
+AddService = armswideopen,%SPSVCINST_ASSOCSERVICE%, armswideopen_Service_Inst
+
+; -------------- armswideopen driver install sections
+[armswideopen_Service_Inst]
+DisplayName    = %armswideopen.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\armswideopen.sys
+
+;
+;--- armswideopen_Device Coinstaller installation ------
+;
+
+[armswideopen_Device.NT.CoInstallers]
+AddReg=armswideopen_Device_CoInstaller_AddReg
+CopyFiles=armswideopen_Device_CoInstaller_CopyFiles
+
+[armswideopen_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[armswideopen_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[armswideopen_Device.NT.Wdf]
+KmdfService =  armswideopen, armswideopen_wdfsect
+[armswideopen_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="ArmsWideOpen"
+ClassName="ArmsWideOpen"
+DiskName = "armswideopen Installation Disk"
+armswideopen.DeviceDesc = "armswideopen Device"
+armswideopen.SVCDESC = "armswideopen Service"
